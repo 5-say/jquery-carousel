@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="zh"> <!--<![endif]-->
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>jquery-carousel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link media="all" type="text/css" rel="stylesheet" href="assets/css/main.css">
+    <script id="seajsnode" src="assets/module/start.js"></script>
+
+</head>
+<body>
+
+    <div class="container">
+
+        
+        <h1>jquery-carousel</h1>
+
+    </div>    
+    <div class="container">
+
+        <h2>example-1</h2>
+        <div id="example-1">
+            <ul>
+                <li><img src="assets/image/common/500.300/1.jpg"></li>
+                <li><img src="assets/image/common/500.300/2.jpg"></li>
+                <li><img src="assets/image/common/500.300/3.jpg"></li>
+            </ul>
+        </div>
+
+        <style type="text/css">
+            #example-1 { width: 500px; height: 300px; margin: 0 auto; overflow: hidden; border: 1px solid #ddd; }
+        </style>
+
+        <script type="text/javascript">
+            seajs.use('carousel', function ($) {
+                $('#example-1').carousel();
+            });
+        </script>
+
+    </div>    
+    <div class="container">
+
+        <h2>example-2</h2>
+        <div id="example-2">
+            <ul>
+                <li><img src="assets/image/common/500.300/1.jpg"></li>
+                <li><img src="assets/image/common/500.300/2.jpg"></li>
+                <li><img src="assets/image/common/500.300/3.jpg"></li>
+            </ul>
+        </div>
+
+        <style type="text/css">
+            #example-2 { width: 500px; height: 300px; margin: 0 auto; overflow: hidden; border: 1px solid #ddd; }
+            #example-2 ul { width: 1500px; }
+            #example-2 ul li { float: left; }
+        </style>
+
+        <script type="text/javascript">
+            seajs.use('carousel', function ($) {
+                $('#example-2').carousel({
+                    animate : 'scrollLeft'
+                });
+            });
+        </script>
+
+
+    </div>
+    
+</body>
+</html>
