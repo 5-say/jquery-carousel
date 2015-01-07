@@ -20,7 +20,8 @@ define(function (require) {
         var Carousel = {
 
 
-            playEvent : 'carousel-next',
+            playEvent   : 'carousel-next',
+            activeIndex : 0,
 
 
             init : function (options, element) {
@@ -32,14 +33,48 @@ define(function (require) {
                 base.userOptions = options;
 
                 // 事件绑定
-                base.$elem.on('carousel-next'    , function () { base.next();     });
-                base.$elem.on('carousel-prev'    , function () { base.prev();     });
                 base.$elem.on('carousel-autoplay', function () { base.autoplay(); });
                 base.$elem.on('carousel-stop'    , function () { base.stop();     });
+                base.$elem.on('carousel-next'    , function (event, stepItem) { base.next(stepItem); });
+                base.$elem.on('carousel-prev'    , function (event, stepItem) { base.prev(stepItem); });
+                base.$elem.on('carousel-goto'    , function (event, index)    { base.goto(index);    });
+
+                base.animateInit().controlNavInit();
 
                 // 自动播放
                 if (base.options.autoplay) base.autoplay();
+            },
 
+
+            animateInit : function () {
+                var base = this;
+
+                // 子元素容器
+                base.$childBox = base.$elem.children().first();
+                // 子元素标记
+                var $items = base.$childBox.children().each(function (i) {
+                    $(this).attr('carousel-index', i);
+                });
+
+                if (base.options.animate.match(/^scroll.+/)) {
+                    // 为无缝滚动做准备
+                    var allWidth = allHeight = 0;
+                    $items
+                        .each(function (i) {
+                            allWidth  += $(this).width();
+                            allHeight += $(this).height();
+                        });
+                    if (base.options.animate.match(/^scroll[Left|Right]/))
+                        base.$childBox.css({
+                            width : allWidth+'px'
+                        });
+                    else
+                        base.$childBox.css({
+                            height : allHeight+'px'
+                        });
+                }
+
+                return base;
             },
 
 
@@ -57,21 +92,22 @@ define(function (require) {
             },
 
 
-            next : function () {
-                var base = this;
+            next : function (stepItem) {
+                var base     = this;
+                var stepItem = stepItem ? stepItem : base.options.stepItem;
 
                 switch (base.options.animate) {
                     case 'scrollUp':
-                        base.childScrollUp();
+                        base.childScrollUp(stepItem);
                         break;
                     case 'scrollDown':
-                        base.childScrollDown();
+                        base.childScrollDown(stepItem);
                         break;
                     case 'scrollLeft':
-                        base.childScrollLeft();
+                        base.childScrollLeft(stepItem);
                         break;
                     case 'scrollRight':
-                        base.childScrollRight();
+                        base.childScrollRight(stepItem);
                         break;
                     default:;
                 }
@@ -81,21 +117,22 @@ define(function (require) {
             },
 
 
-            prev : function () {
-                var base = this;
+            prev : function (stepItem) {
+                var base     = this;
+                var stepItem = stepItem ? stepItem : base.options.stepItem;
 
                 switch (base.options.animate) {
                     case 'scrollUp':
-                        base.childScrollDown();
+                        base.childScrollDown(stepItem);
                         break;
                     case 'scrollDown':
-                        base.childScrollUp();
+                        base.childScrollUp(stepItem);
                         break;
                     case 'scrollLeft':
-                        base.childScrollRight();
+                        base.childScrollRight(stepItem);
                         break;
                     case 'scrollRight':
-                        base.childScrollLeft();
+                        base.childScrollLeft(stepItem);
                         break;
                     default:;
                 }
@@ -105,91 +142,156 @@ define(function (require) {
             },
 
 
-            goto : function (index) {
+            goto : function (targetIndex) {
                 var base = this;
-                // seamless 无缝
+
+                
+                if (base.options.animate.match(/^scroll.+/)) {
+                    base.childScrollTo(targetIndex);
+                }
+
+                return base;
             },
 
 
-            childScrollUp : function () {
+            childScrollTo : function (targetIndex) {
                 var base = this;
 
-                var childBox = base.$elem.children().first().stop(true, true);
-                var original = childBox.css('marginTop');
+                if (targetIndex === base.activeIndex) return;
+
+                var $childBox = base.$childBox.stop(true, true);
+                if (base.options.animate.match(/^scroll[Left|Right]/)) {
+                    if (targetIndex > base.activeIndex)
+                        base.childScrollLeft(targetIndex - base.activeIndex);
+                    else
+                        base.childScrollRight(base.activeIndex - targetIndex);
+                } else {
+                    if (targetIndex > base.activeIndex)
+                        base.childScrollUp(targetIndex - base.activeIndex);
+                    else
+                        base.childScrollDown(base.activeIndex - targetIndex);
+                }
+
+                return base;
+            },
+
+
+            childScrollUp : function (stepItem) {
+                var base = this;
+
+                var $childBox = base.$childBox;
+                var original = $childBox.css('marginTop');
 
                 var stepSize = 0;
-                childBox.children().slice(0, base.options.stepItem).each(function (i) {
+                $childBox.children().slice(0, stepItem).each(function (i) {
                     stepSize += $(this).height();
                 });
                 var endSize  = parseInt(original) - stepSize;
 
-                childBox
-                    .animate({marginTop : endSize + 'px'}, base.options.speed, function(){
+                $childBox
+                    .animate({marginTop : endSize+'px'}, base.options.speed, function(){
                         $(this)
                             .css('marginTop', original)
-                            .children().slice(0, base.options.stepItem).appendTo($(this));
+                            .children().slice(0, stepItem).appendTo($(this));
+                        var activeIndex = base.$childBox.children().first().attr('carousel-index');    
+                        base.controlNavActived(activeIndex).options.end(activeIndex, base);
                     });
             },
 
 
-            childScrollDown : function () {
+            childScrollDown : function (stepItem) {
                 var base = this;
 
-                var childBox = base.$elem.children().first().stop(true, true);
-                var original = childBox.css('marginTop');
+                var $childBox = base.$childBox;
+                var original = $childBox.css('marginTop');
 
                 var stepSize = 0;
-                childBox.children().slice(-base.options.stepItem).each(function (i) {
+                $childBox.children().slice(-stepItem).each(function (i) {
                     stepSize += $(this).height();
                 });
                 var endSize  = parseInt(original) + stepSize;
 
-                childBox
-                    .css({marginTop : '-' + endSize + 'px'})
-                    .children().slice(-base.options.stepItem).prependTo(childBox);
-                childBox
-                    .animate({marginTop : 0}, base.options.speed);
-            },
-
-
-            childScrollLeft : function () {
-                var base = this;
-
-                var childBox = base.$elem.children().first().stop(true, true);
-                var original = childBox.css('marginLeft');
-
-                var stepSize = 0;
-                childBox.children().slice(0, base.options.stepItem).each(function (i) {
-                    stepSize += $(this).width();
-                });
-                var endSize  = parseInt(original) - stepSize;
-
-                childBox
-                    .animate({marginLeft : endSize + 'px'}, base.options.speed, function(){
-                        $(this)
-                            .css('marginLeft', original)
-                            .children().slice(0, base.options.stepItem).appendTo($(this));
+                $childBox
+                    .css({marginTop : '-'+endSize+'px'})
+                    .children().slice(-stepItem).prependTo($childBox);
+                $childBox
+                    .animate({marginTop : 0}, base.options.speed, function () {
+                        var activeIndex = base.$childBox.children().first().attr('carousel-index');    
+                        base.controlNavActived(activeIndex).options.end(activeIndex, base);
                     });
             },
 
 
-            childScrollRight : function () {
+            childScrollLeft : function (stepItem) {
                 var base = this;
 
-                var childBox = base.$elem.children().first().stop(true, true);
-                var original = childBox.css('marginLeft');
+                var $childBox = base.$childBox;
+                var original = $childBox.css('marginLeft');
 
                 var stepSize = 0;
-                childBox.children().slice(-base.options.stepItem).each(function (i) {
+                $childBox.children().slice(0, stepItem).each(function (i) {
+                    stepSize += $(this).width();
+                });
+                var endSize  = parseInt(original) - stepSize;
+
+                $childBox
+                    .animate({marginLeft : endSize+'px'}, base.options.speed, function () {
+                        $(this)
+                            .css('marginLeft', original)
+                            .children().slice(0, stepItem).appendTo($(this));
+                        var activeIndex = base.$childBox.children().first().attr('carousel-index');    
+                        base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                    });
+            },
+
+
+            childScrollRight : function (stepItem) {
+                var base = this;
+
+                var $childBox = base.$childBox;
+                var original = $childBox.css('marginLeft');
+
+                var stepSize = 0;
+                $childBox.children().slice(-stepItem).each(function (i) {
                     stepSize += $(this).width();
                 });
                 var endSize  = parseInt(original) + stepSize;
 
-                childBox
-                    .css({marginLeft : '-' + endSize + 'px'})
-                    .children().slice(-base.options.stepItem).prependTo(childBox);
-                childBox
-                    .animate({marginLeft : 0}, base.options.speed);
+                $childBox
+                    .css({marginLeft : '-'+endSize+'px'})
+                    .children().slice(-stepItem).prependTo($childBox);
+                $childBox
+                    .animate({marginLeft : 0}, base.options.speed, function () {
+                        var activeIndex = base.$childBox.children().first().attr('carousel-index');    
+                        base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                    });
+            },
+
+
+            controlNavInit : function () {
+                var base = this;
+
+                if (base.options.controlNav)
+                    $(base.options.controlNav)
+                        .on(base.options.controlNavEvent, function () {
+                            $(this).addClass('active').siblings().removeClass('active');
+                            base.stop().goto($(this).index()).autoplay();
+                            return false;
+                        })
+                        .eq(base.activeIndex).addClass('active');
+                
+                return base;
+            },
+
+
+            controlNavActived : function (index) {
+                var base = this;
+
+                base.activeIndex = index;
+                if (base.options.controlNav)
+                    $(base.options.controlNav).removeClass('active').eq(index).addClass('active');
+
+                return base;
             },
 
 
@@ -217,7 +319,10 @@ define(function (require) {
             speed    : 900,        // 动画速度：ms
             repeat   : 3000,       // 重复间隔：ms
             autoplay : true,       // 自动播放：true | false
-            seamless : true,       // 无缝切换：true | false
+            controlNav : null,
+            controlNavEvent : 'click',
+            end : function (activeIndex, base) { },
+            // seamless : true,       // 无缝切换：true | false
             other : null
         };
 

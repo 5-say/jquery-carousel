@@ -31,6 +31,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
     /*限宽容器*/
     .container { width: 1000px; height: auto; margin: 0 auto; overflow: hidden; background-color: #fff; padding: 30px; }
     
-    h1 { text-align: center; }
+    h1 { text-align: center; line-height: 2; }
+    h2 { text-align: center; border-bottom: 1px solid #ccc; line-height: 2; }
 
 
