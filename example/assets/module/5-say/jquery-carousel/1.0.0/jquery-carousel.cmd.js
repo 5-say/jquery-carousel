@@ -33,11 +33,11 @@ define(function (require) {
                 base.userOptions = options;
 
                 // 事件绑定
-                base.$elem.on('carousel-autoplay', function () { base.autoplay(); });
-                base.$elem.on('carousel-stop'    , function () { base.stop();     });
-                base.$elem.on('carousel-next'    , function (event, stepItem) { base.next(stepItem); });
-                base.$elem.on('carousel-prev'    , function (event, stepItem) { base.prev(stepItem); });
-                base.$elem.on('carousel-goto'    , function (event, index)    { base.goto(index);    });
+                base.$elem.on('carousel-stop'    , function () { base.stop(); });
+                base.$elem.on('carousel-autoplay', function (event, repeat)   { base.autoplay(repeat); });
+                base.$elem.on('carousel-next'    , function (event, stepItem) { base.next(stepItem);   });
+                base.$elem.on('carousel-prev'    , function (event, stepItem) { base.prev(stepItem);   });
+                base.$elem.on('carousel-goto'    , function (event, index)    { base.goto(index);      });
 
                 base.animateInit().nextNavInit().prevNavInit().controlNavInit();
 
