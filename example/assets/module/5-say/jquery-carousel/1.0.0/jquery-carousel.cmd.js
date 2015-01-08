@@ -39,7 +39,7 @@ define(function (require) {
                 base.$elem.on('carousel-prev'    , function (event, stepItem) { base.prev(stepItem); });
                 base.$elem.on('carousel-goto'    , function (event, index)    { base.goto(index);    });
 
-                base.animateInit().controlNavInit();
+                base.animateInit().nextNavInit().prevNavInit().controlNavInit();
 
                 // 自动播放
                 if (base.options.autoplay) base.autoplay();
@@ -78,9 +78,10 @@ define(function (require) {
             },
 
 
-            autoplay : function () {
-                var base = this;
-                base.$elem.repeat(base.options.repeat).trigger(base.playEvent);
+            autoplay : function (repeat) {
+                var base   = this;
+                var repeat = repeat ? repeat : base.options.repeat;
+                base.$elem.repeat(repeat).trigger(base.playEvent);
                 return base;
             },
 
@@ -268,17 +269,61 @@ define(function (require) {
             },
 
 
+            prevNavInit : function () {
+                var base = this;
+
+                if (base.options.prevNav) {
+
+                    var $prevNav = base.options.prevNav.match(/^>.+/)
+                        ? base.$elem.find(base.options.prevNav)
+                        : $(base.options.prevNav);
+
+                    $prevNav.on('click', function () {
+                        base.stop().prev().autoplay();
+                        return false;
+                    });
+                }
+                
+                return base;
+            },
+
+
+            nextNavInit : function () {
+                var base = this;
+
+                if (base.options.nextNav) {
+
+                    var $nextNav = base.options.nextNav.match(/^>.+/)
+                        ? base.$elem.find(base.options.nextNav)
+                        : $(base.options.nextNav);
+
+                    $nextNav.on('click', function () {
+                        base.stop().next().autoplay();
+                        return false;
+                    });
+                }
+                
+                return base;
+            },
+
+
             controlNavInit : function () {
                 var base = this;
 
-                if (base.options.controlNav)
-                    $(base.options.controlNav)
+                if (base.options.controlNav) {
+
+                    var $controlNav = base.options.controlNav.match(/^>.+/)
+                        ? base.$elem.find(base.options.controlNav)
+                        : $(base.options.controlNav);
+
+                    $controlNav
                         .on(base.options.controlNavEvent, function () {
                             $(this).addClass('active').siblings().removeClass('active');
                             base.stop().goto($(this).index()).autoplay();
                             return false;
                         })
                         .eq(base.activeIndex).addClass('active');
+                }
                 
                 return base;
             },
@@ -288,8 +333,14 @@ define(function (require) {
                 var base = this;
 
                 base.activeIndex = index;
-                if (base.options.controlNav)
-                    $(base.options.controlNav).removeClass('active').eq(index).addClass('active');
+                if (base.options.controlNav) {
+
+                    var $controlNav = base.options.controlNav.match(/^>.+/)
+                        ? base.$elem.find(base.options.controlNav)
+                        : $(base.options.controlNav);
+                    
+                    $controlNav.removeClass('active').eq(index).addClass('active');
+                }
 
                 return base;
             },
@@ -319,6 +370,8 @@ define(function (require) {
             speed    : 900,        // 动画速度：ms
             repeat   : 3000,       // 重复间隔：ms
             autoplay : true,       // 自动播放：true | false
+            nextNav : null,
+            prevNav : null,
             controlNav : null,
             controlNavEvent : 'click',
             end : function (activeIndex, base) { },
