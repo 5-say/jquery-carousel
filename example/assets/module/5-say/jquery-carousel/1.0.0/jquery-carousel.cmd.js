@@ -67,7 +67,7 @@ define(function (require) {
                     if (base.options.animate.match(/^scroll[Left|Right]/))
                         base.$childBox.css({
                             width : allWidth+'px'
-                        });
+                        }).children().css({ float : 'left' });
                     else
                         base.$childBox.css({
                             height : allHeight+'px'
@@ -338,7 +338,7 @@ define(function (require) {
                     var $controlNav = base.options.controlNav.match(/^>.+/)
                         ? base.$elem.find(base.options.controlNav)
                         : $(base.options.controlNav);
-                    
+
                     $controlNav.removeClass('active').eq(index).addClass('active');
                 }
 
