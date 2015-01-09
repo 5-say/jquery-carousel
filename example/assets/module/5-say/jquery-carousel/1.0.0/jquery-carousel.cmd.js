@@ -164,9 +164,12 @@ define(function (require) {
             goto : function (targetIndex) {
                 var base = this;
 
-                
-                if (base.options.animate.match(/^scroll.+/)) {
+                if (targetIndex === base.activeIndex) {
+                    return base;
+                } else if (base.options.animate.match(/^scroll.+/)) {
                     base.childScrollTo(targetIndex);
+                } else if (base.options.animate === 'fade') {
+                    base.childFadeTo(targetIndex);
                 }
 
                 return base;
@@ -177,8 +180,6 @@ define(function (require) {
         
             childScrollTo : function (targetIndex) {
                 var base = this;
-
-                if (targetIndex === base.activeIndex) return;
 
                 var $childBox = base.$childBox.stop(true, true);
                 if (base.options.animate.match(/^scroll[Left|Right]/)) {
@@ -315,17 +316,21 @@ define(function (require) {
                 });
             },
 
-            childFadeTo : function () {
-                // var base = this;
+            childFadeTo : function (targetIndex) {
+                var base = this;
 
-                // var $items = base.$childBox.children().stop(true, true);
+                var $childBox    = base.$childBox;
+                var $items       = $childBox.children().stop(true, true);
+                var $activeIndex = $items.eq(0);
+                var $targetIndex = $childBox.children('[carousel-index="'+targetIndex+'"]');
 
-                // $items.eq(1).hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
-                //     $items.eq(0).css({ zIndex : 1 }).appendTo(base.$childBox);
-                //     $(this).css({ zIndex : 2 });
-                //     var activeIndex = base.$childBox.children().first().attr('carousel-index');    
-                //     base.controlNavActived(activeIndex).options.end(activeIndex, base);
-                // });
+                $items.slice(0, $targetIndex.index()).appendTo($childBox);
+                $targetIndex.hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
+                    $items.eq(0).css({ zIndex : 1 });
+                    $(this).css({ zIndex : 2 });
+                    var activeIndex = base.$childBox.children().first().attr('carousel-index');    
+                    base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                });
             },
 
         // childFade - end
