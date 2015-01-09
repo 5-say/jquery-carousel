@@ -181,13 +181,13 @@ define(function (require) {
                 var base = this;
 
                 var $childBox = base.$childBox;
-                var original = $childBox.css('marginTop');
+                var original  = $childBox.css('marginTop');
 
-                var stepSize = 0;
+                var stepSize  = 0;
                 $childBox.children().slice(0, stepItem).each(function (i) {
                     stepSize += $(this).height();
                 });
-                var endSize  = parseInt(original) - stepSize;
+                var endSize   = parseInt(original) - stepSize;
 
                 $childBox
                     .animate({marginTop : endSize+'px'}, base.options.speed, function(){
@@ -204,13 +204,13 @@ define(function (require) {
                 var base = this;
 
                 var $childBox = base.$childBox;
-                var original = $childBox.css('marginTop');
+                var original  = $childBox.css('marginTop');
 
-                var stepSize = 0;
+                var stepSize  = 0;
                 $childBox.children().slice(-stepItem).each(function (i) {
                     stepSize += $(this).height();
                 });
-                var endSize  = parseInt(original) + stepSize;
+                var endSize   = parseInt(original) + stepSize;
 
                 $childBox
                     .css({marginTop : '-'+endSize+'px'})
@@ -227,13 +227,13 @@ define(function (require) {
                 var base = this;
 
                 var $childBox = base.$childBox;
-                var original = $childBox.css('marginLeft');
+                var original  = $childBox.css('marginLeft');
 
-                var stepSize = 0;
+                var stepSize  = 0;
                 $childBox.children().slice(0, stepItem).each(function (i) {
                     stepSize += $(this).width();
                 });
-                var endSize  = parseInt(original) - stepSize;
+                var endSize   = parseInt(original) - stepSize;
 
                 $childBox
                     .animate({marginLeft : endSize+'px'}, base.options.speed, function () {
@@ -250,13 +250,13 @@ define(function (require) {
                 var base = this;
 
                 var $childBox = base.$childBox;
-                var original = $childBox.css('marginLeft');
+                var original  = $childBox.css('marginLeft');
 
-                var stepSize = 0;
+                var stepSize  = 0;
                 $childBox.children().slice(-stepItem).each(function (i) {
                     stepSize += $(this).width();
                 });
-                var endSize  = parseInt(original) + stepSize;
+                var endSize   = parseInt(original) + stepSize;
 
                 $childBox
                     .css({marginLeft : '-'+endSize+'px'})
@@ -279,7 +279,8 @@ define(function (require) {
                         : $(base.options.prevNav);
 
                     $prevNav.on('click', function () {
-                        base.stop().prev().autoplay();
+                        base.stop().prev();
+                        if (! base.options.stopOnAction) base.autoplay();
                         return false;
                     });
                 }
@@ -298,7 +299,8 @@ define(function (require) {
                         : $(base.options.nextNav);
 
                     $nextNav.on('click', function () {
-                        base.stop().next().autoplay();
+                        base.stop().next();
+                        if (! base.options.stopOnAction) base.autoplay();
                         return false;
                     });
                 }
@@ -319,7 +321,8 @@ define(function (require) {
                     $controlNav
                         .on(base.options.controlNavEvent, function () {
                             $(this).addClass('active').siblings().removeClass('active');
-                            base.stop().goto($(this).index()).autoplay();
+                            base.stop().goto($(this).index());
+                            if (! base.options.stopOnAction) base.autoplay();
                             return false;
                         })
                         .eq(base.activeIndex).addClass('active');
@@ -365,17 +368,25 @@ define(function (require) {
 
 
         $.fn.carousel.options = {
-            stepItem : 1,          // 步进项目数量
-            animate  : 'scrollUp', // 动画：预定义动画
-            speed    : 900,        // 动画速度：ms
-            repeat   : 3000,       // 重复间隔：ms
-            autoplay : true,       // 自动播放：true | false
-            nextNav : null,
-            prevNav : null,
-            controlNav : null,
-            controlNavEvent : 'click',
-            end : function (activeIndex, base) { },
-            // seamless : true,       // 无缝切换：true | false
+
+            animate         : 'scrollLeft', // 动画：预定义动画
+                                            // scrollLeft、scrollRight、scrollUp、scrollDown
+                                            // fade
+
+            stepItem        : 1,            // 步进项目数量
+            speed           : 900,          // 动画速度：ms
+            repeat          : 3000,         // 重复间隔：ms
+            autoplay        : true,         // 自动播放：true | false
+            stopOnAction    : true,         // 控制交互后停止自动播放：true | false
+
+            // 默认全局选择器，支持首字符为 '>' 的子元素选择器
+            prevNav         : null,         // 选择器，上一个
+            nextNav         : null,         // 选择器，下一个
+            controlNav      : null,         // 选择器，控制导航
+            controlNavEvent : 'click',      // 控制导航触发事件
+
+            end   : function (activeIndex, base) { }, // 切换完成后的回调函数
+
             other : null
         };
 
