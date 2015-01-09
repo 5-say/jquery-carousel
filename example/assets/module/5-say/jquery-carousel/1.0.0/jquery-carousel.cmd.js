@@ -202,6 +202,7 @@ define(function (require) {
 
                 var $childBox = base.$childBox.stop(true, true);
                 var original  = $childBox.css('marginTop');
+                base.controlNavActived($childBox.children().eq(stepItem).attr('carousel-index'));
 
                 var stepSize  = 0;
                 $childBox.children().slice(0, stepItem).each(function (i) {
@@ -215,7 +216,7 @@ define(function (require) {
                             .css('marginTop', original)
                             .children().slice(0, stepItem).appendTo($(this));
                         var activeIndex = $childBox.children().first().attr('carousel-index');    
-                        base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                        base.options.end(activeIndex, base);
                     });
             },
 
@@ -224,6 +225,7 @@ define(function (require) {
 
                 var $childBox = base.$childBox.stop(true, true);
                 var original  = $childBox.css('marginTop');
+                base.controlNavActived($childBox.children().slice(-stepItem).eq(0).attr('carousel-index'));
 
                 var stepSize  = 0;
                 $childBox.children().slice(-stepItem).each(function (i) {
@@ -237,7 +239,7 @@ define(function (require) {
                 $childBox
                     .animate({marginTop : 0}, base.options.speed, function () {
                         var activeIndex = $childBox.children().first().attr('carousel-index');    
-                        base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                        base.options.end(activeIndex, base);
                     });
             },
 
@@ -246,6 +248,7 @@ define(function (require) {
 
                 var $childBox = base.$childBox.stop(true, true);
                 var original  = $childBox.css('marginLeft');
+                base.controlNavActived($childBox.children().eq(stepItem).attr('carousel-index'));
 
                 var stepSize  = 0;
                 $childBox.children().slice(0, stepItem).each(function (i) {
@@ -259,15 +262,16 @@ define(function (require) {
                             .css('marginLeft', original)
                             .children().slice(0, stepItem).appendTo($(this));
                         var activeIndex = $childBox.children().first().attr('carousel-index');    
-                        base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                        base.options.end(activeIndex, base);
                     });
             },
 
             childScrollRight : function (stepItem) {
                 var base = this;
 
-                var $childBox = base.$childBox;
+                var $childBox = base.$childBox.stop(true, true);
                 var original  = $childBox.css('marginLeft');
+                base.controlNavActived($childBox.children().slice(-stepItem).eq(0).attr('carousel-index'));
 
                 var stepSize  = 0;
                 $childBox.children().slice(-stepItem).each(function (i) {
@@ -281,7 +285,7 @@ define(function (require) {
                 $childBox
                     .animate({marginLeft : 0}, base.options.speed, function () {
                         var activeIndex = $childBox.children().first().attr('carousel-index');    
-                        base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                        base.options.end(activeIndex, base);
                     });
             },
 
@@ -294,12 +298,12 @@ define(function (require) {
                 var base = this;
 
                 var $items = base.$childBox.children().stop(true, true);
+                base.controlNavActived($items.last().attr('carousel-index'));
 
                 $items.last().prependTo(base.$childBox).hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
                     $items.eq(0).css({ zIndex : 1 });
                     $(this).css({ zIndex : 2 });
-                    var activeIndex = base.$childBox.children().first().attr('carousel-index');    
-                    base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                    base.options.end($(this).attr('carousel-index'), base);
                 });
             },
 
@@ -307,12 +311,13 @@ define(function (require) {
                 var base = this;
 
                 var $items = base.$childBox.children().stop(true, true);
+                base.controlNavActived($items.eq(1).attr('carousel-index'));
 
                 $items.eq(1).hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
                     $items.eq(0).css({ zIndex : 1 }).appendTo(base.$childBox);
                     $(this).css({ zIndex : 2 });
                     var activeIndex = base.$childBox.children().first().attr('carousel-index');    
-                    base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                    base.options.end($(this).attr('carousel-index'), base);
                 });
             },
 
@@ -328,8 +333,7 @@ define(function (require) {
                 $targetIndex.hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
                     $items.eq(0).css({ zIndex : 1 });
                     $(this).css({ zIndex : 2 });
-                    var activeIndex = base.$childBox.children().first().attr('carousel-index');    
-                    base.controlNavActived(activeIndex).options.end(activeIndex, base);
+                    base.options.end(targetIndex, base);
                 });
             },
 
