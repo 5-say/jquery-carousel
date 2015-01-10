@@ -237,7 +237,7 @@ define(function (require) {
                     .css({marginTop : '-'+endSize+'px'})
                     .children().slice(-stepItem).prependTo($childBox);
                 $childBox
-                    .animate({marginTop : 0}, base.options.speed, function () {
+                    .animate({marginTop : original}, base.options.speed, function () {
                         var activeIndex = $childBox.children().first().attr('carousel-index');    
                         base.options.end(activeIndex, base);
                     });
@@ -283,7 +283,7 @@ define(function (require) {
                     .css({marginLeft : '-'+endSize+'px'})
                     .children().slice(-stepItem).prependTo($childBox);
                 $childBox
-                    .animate({marginLeft : 0}, base.options.speed, function () {
+                    .animate({marginLeft : original}, base.options.speed, function () {
                         var activeIndex = $childBox.children().first().attr('carousel-index');    
                         base.options.end(activeIndex, base);
                     });

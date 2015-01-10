@@ -48,7 +48,7 @@
 
         <h2>example-2</h2>
         <div id="example-2">
-            <ul>
+            <ul style="margin-top: 50px;">
                 <li><img src="assets/image/common/500.300/1.jpg"></li>
                 <li><img src="assets/image/common/500.300/2.jpg"></li>
                 <li><img src="assets/image/common/500.300/3.jpg"></li>
@@ -82,7 +82,8 @@
         <script type="text/javascript">
             seajs.use('carousel', function ($) {
                 var list = $('#example-2').carousel({
-                    animate    : 'fade',
+                    animate    : 'scrollUp',
+                    autoplay:false,
                     prevNav    : '> .prev',
                     nextNav    : '> .next',
                     controlNav : '> .control-nav a'
