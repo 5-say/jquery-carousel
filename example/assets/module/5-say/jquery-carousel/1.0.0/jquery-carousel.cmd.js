@@ -24,6 +24,12 @@ define(function (require) {
             activeIndex : 0,
 
 
+            $items : function () {
+                var base = this;
+                return base.options.$items(base.$itemBox);
+            },
+
+
             init : function (options, element) {
 
                 var base = this;
@@ -31,13 +37,15 @@ define(function (require) {
                 base.$elem       = $(element);
                 base.options     = $.extend({}, $.fn.carousel.options, base.$elem.data(), options);
                 base.userOptions = options;
+                base.$itemBox    = base.options.$itemBox(base.$elem);
+
 
                 // 事件绑定
                 base.$elem.on('carousel-stop'    , function () { base.stop(); return false; });
                 base.$elem.on('carousel-autoplay', function (event, repeat)   { base.autoplay(repeat); return false; });
-                base.$elem.on('carousel-next'    , function (event, stepItem) { base.next(stepItem); return false;   });
-                base.$elem.on('carousel-prev'    , function (event, stepItem) { base.prev(stepItem); return false;   });
-                base.$elem.on('carousel-goto'    , function (event, index)    { base.goto(index); return false;      });
+                base.$elem.on('carousel-next'    , function (event, stepItem) { base.next(stepItem);   return false; });
+                base.$elem.on('carousel-prev'    , function (event, stepItem) { base.prev(stepItem);   return false; });
+                base.$elem.on('carousel-goto'    , function (event, index)    { base.goto(index);      return false; });
 
                 base.animateInit().nextNavInit().prevNavInit().controlNavInit();
 
@@ -47,43 +55,49 @@ define(function (require) {
 
 
             animateInit : function () {
-                var base = this;
+                var base     = this,
+                    $itemBox = base.$itemBox,
+                    $items   = base.$items();
 
-                // 子元素容器
-                base.$childBox = base.$elem.children().first();
                 // 子元素标记
-                var $items = base.$childBox.children().each(function (i) {
+                $items.each(function (i) {
                     $(this).attr('carousel-index', i);
                 });
 
                 if (base.options.animate.match(/^scroll.+/)) {
                     // 为无缝滚动做准备
                     var allWidth = allHeight = 0;
-                    $items
-                        .each(function (i) {
-                            allWidth  += $(this).width();
-                            allHeight += $(this).height();
-                        });
-                    if (base.options.animate.match(/^scroll[Left|Right]/))
-                        base.$childBox.css({
-                            width : allWidth+'px'
-                        }).children().css({ float : 'left' });
-                    else
-                        base.$childBox.css({
-                            height : allHeight+'px'
-                        });
-                } else if (base.options.animate === 'fade') {
-                    base.$childBox.css({
-                        position : 'relative',
-                        zIndex   : 0
-                    })
-                    .children().css({
-                        position : 'absolute',
-                        zIndex   : 1
-                    })
-                    .first().css({
-                        zIndex   : 2
+                    $items.each(function (i) {
+                        allWidth  += $(this).width();
+                        allHeight += $(this).height();
                     });
+
+                    if (base.options.animate.match(/^scroll[Left|Right]/)) {
+                        $itemBox
+                            .css({ width : allWidth+'px' });
+                        $items
+                            .css({ float : 'left' });
+                    } else {
+                        $itemBox
+                            .css({ height : allHeight+'px' });
+                    }
+                } else if (base.options.animate === 'fade') {
+                    $itemBox
+                        .css({
+                            position : 'relative',
+                            zIndex   : 0
+                        });
+                    $items
+                        .css({
+                            position : 'absolute',
+                            zIndex   : 1
+                        })
+                        .hide()
+                    .first()
+                        .css({
+                            zIndex   : 2
+                        })
+                        .show();
                 }
 
                 return base;
@@ -164,9 +178,7 @@ define(function (require) {
             goto : function (targetIndex) {
                 var base = this;
 
-                if (targetIndex === base.activeIndex) {
-                    return base;
-                } else if (base.options.animate.match(/^scroll.+/)) {
+                if (base.options.animate.match(/^scroll.+/)) {
                     base.childScrollTo(targetIndex);
                 } else if (base.options.animate === 'fade') {
                     base.childFadeTo(targetIndex);
@@ -180,112 +192,116 @@ define(function (require) {
         
             childScrollTo : function (targetIndex) {
                 var base = this;
+                base.$itemBox.stop(true, true);
 
-                var $childBox = base.$childBox.stop(true, true);
+                if (targetIndex === base.activeIndex) return base;
+                
+                var nextStepItem = base.$items().siblings('[carousel-index="'+targetIndex+'"]').index(),
+                    prevStepItem = base.$items().length - nextStepItem;
+
                 if (base.options.animate.match(/^scroll[Left|Right]/)) {
-                    if (targetIndex > base.activeIndex)
-                        base.childScrollLeft(targetIndex - base.activeIndex);
+                    if (nextStepItem < prevStepItem)
+                        base.childScrollLeft(nextStepItem);
                     else
-                        base.childScrollRight(base.activeIndex - targetIndex);
+                        base.childScrollRight(prevStepItem);
                 } else {
-                    if (targetIndex > base.activeIndex)
-                        base.childScrollUp(targetIndex - base.activeIndex);
+                    if (nextStepItem < prevStepItem)
+                        base.childScrollUp(nextStepItem);
                     else
-                        base.childScrollDown(base.activeIndex - targetIndex);
+                        base.childScrollDown(prevStepItem);
                 }
 
                 return base;
             },
 
             childScrollUp : function (stepItem) {
-                var base = this;
+                var base     = this,
+                    $itemBox = base.$itemBox.stop(true, true),
+                    $items   = base.$items(),
+                    original = $itemBox.css('marginTop');
 
-                var $childBox = base.$childBox.stop(true, true);
-                var original  = $childBox.css('marginTop');
-                base.controlNavActived($childBox.children().eq(stepItem).attr('carousel-index'));
+                base.controlNavActived($items.eq(stepItem).attr('carousel-index'));
 
                 var stepSize  = 0;
-                $childBox.children().slice(0, stepItem).each(function (i) {
+                $items.slice(0, stepItem).each(function (i) {
                     stepSize += $(this).height();
                 });
                 var endSize   = parseInt(original) - stepSize;
 
-                $childBox
+                $itemBox
                     .animate({marginTop : endSize+'px'}, base.options.speed, function(){
-                        $(this)
-                            .css('marginTop', original)
-                            .children().slice(0, stepItem).appendTo($(this));
-                        var activeIndex = $childBox.children().first().attr('carousel-index');    
-                        base.options.end(activeIndex, base);
+                        $(this).css('marginTop', original);
+                        $items.slice(0, stepItem).appendTo($(this));
+                        base.activeIndex += stepItem;
+                        base.options.end(base.activeIndex, base);
                     });
             },
 
             childScrollDown : function (stepItem) {
-                var base = this;
-
-                var $childBox = base.$childBox.stop(true, true);
-                var original  = $childBox.css('marginTop');
-                base.controlNavActived($childBox.children().slice(-stepItem).eq(0).attr('carousel-index'));
+                var base     = this,
+                    $itemBox = base.$itemBox.stop(true, true),
+                    $items   = base.$items(),
+                    original = $itemBox.css('marginTop');
+                base.controlNavActived($items.slice(-stepItem).eq(0).attr('carousel-index'));
 
                 var stepSize  = 0;
-                $childBox.children().slice(-stepItem).each(function (i) {
+                $items.slice(-stepItem).each(function (i) {
                     stepSize += $(this).height();
                 });
                 var endSize   = parseInt(original) + stepSize;
 
-                $childBox
-                    .css({marginTop : '-'+endSize+'px'})
-                    .children().slice(-stepItem).prependTo($childBox);
-                $childBox
+                $itemBox
+                    .css({marginTop : '-'+endSize+'px'});
+                $items.slice(-stepItem).prependTo($itemBox);
+                $itemBox
                     .animate({marginTop : original}, base.options.speed, function () {
-                        var activeIndex = $childBox.children().first().attr('carousel-index');    
-                        base.options.end(activeIndex, base);
+                        base.activeIndex += stepItem;
+                        base.options.end(base.activeIndex, base);
                     });
             },
 
             childScrollLeft : function (stepItem) {
-                var base = this;
+                var base     = this,
+                    $itemBox = base.$itemBox.stop(true, true),
+                    $items   = base.$items(),
+                    original = $itemBox.css('marginLeft');
 
-                var $childBox = base.$childBox.stop(true, true);
-                var original  = $childBox.css('marginLeft');
-                base.controlNavActived($childBox.children().eq(stepItem).attr('carousel-index'));
+                base.controlNavActived($items.eq(stepItem).attr('carousel-index'));
 
                 var stepSize  = 0;
-                $childBox.children().slice(0, stepItem).each(function (i) {
+                $items.slice(0, stepItem).each(function (i) {
                     stepSize += $(this).width();
                 });
                 var endSize   = parseInt(original) - stepSize;
 
-                $childBox
+                $itemBox
                     .animate({marginLeft : endSize+'px'}, base.options.speed, function () {
-                        $(this)
-                            .css('marginLeft', original)
-                            .children().slice(0, stepItem).appendTo($(this));
-                        var activeIndex = $childBox.children().first().attr('carousel-index');    
-                        base.options.end(activeIndex, base);
+                        $(this).css('marginLeft', original);
+                        $items.slice(0, stepItem).appendTo($(this));
+                        base.activeIndex += stepItem;
+                        base.options.end(base.activeIndex, base);
                     });
             },
 
             childScrollRight : function (stepItem) {
-                var base = this;
-
-                var $childBox = base.$childBox.stop(true, true);
-                var original  = $childBox.css('marginLeft');
-                base.controlNavActived($childBox.children().slice(-stepItem).eq(0).attr('carousel-index'));
+                var base     = this,
+                    $itemBox = base.$itemBox.stop(true, true),
+                    $items   = base.$items(),
+                    original = $itemBox.css('marginLeft');
+                base.controlNavActived($items.slice(-stepItem).eq(0).attr('carousel-index'));
 
                 var stepSize  = 0;
-                $childBox.children().slice(-stepItem).each(function (i) {
+                $items.slice(-stepItem).each(function (i) {
                     stepSize += $(this).width();
                 });
                 var endSize   = parseInt(original) + stepSize;
 
-                $childBox
-                    .css({marginLeft : '-'+endSize+'px'})
-                    .children().slice(-stepItem).prependTo($childBox);
-                $childBox
+                $itemBox.css({marginLeft : '-'+endSize+'px'});
+                $items.slice(-stepItem).prependTo($itemBox);
+                $itemBox
                     .animate({marginLeft : original}, base.options.speed, function () {
-                        var activeIndex = $childBox.children().first().attr('carousel-index');    
-                        base.options.end(activeIndex, base);
+                        base.activeIndex += stepItem;
+                        base.options.end(base.activeIndex, base);
                     });
             },
 
@@ -297,43 +313,46 @@ define(function (require) {
             childFadePrev : function () {
                 var base = this;
 
-                var $items = base.$childBox.children().stop(true, true);
+                var $items = base.$items().stop(true, true);
                 base.controlNavActived($items.last().attr('carousel-index'));
 
-                $items.last().prependTo(base.$childBox).hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
+                $items.last().prependTo(base.$itemBox).hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
                     $items.eq(0).css({ zIndex : 1 });
                     $(this).css({ zIndex : 2 });
                     base.options.end($(this).attr('carousel-index'), base);
+                    base.activeIndex++;
                 });
             },
 
             childFadeNext : function () {
                 var base = this;
 
-                var $items = base.$childBox.children().stop(true, true);
+                var $items = base.$items().stop(true, true);
                 base.controlNavActived($items.eq(1).attr('carousel-index'));
 
                 $items.eq(1).hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
-                    $items.eq(0).css({ zIndex : 1 }).appendTo(base.$childBox);
+                    $items.eq(0).css({ zIndex : 1 }).appendTo(base.$itemBox);
                     $(this).css({ zIndex : 2 });
-                    var activeIndex = base.$childBox.children().first().attr('carousel-index');    
                     base.options.end($(this).attr('carousel-index'), base);
+                    base.activeIndex++;
                 });
             },
 
             childFadeTo : function (targetIndex) {
-                var base = this;
+                var base   = this;
+                var $items = base.$items().stop(true, true);
 
-                var $childBox    = base.$childBox;
-                var $items       = $childBox.children().stop(true, true);
-                var $activeIndex = $items.eq(0);
-                var $targetIndex = $childBox.children('[carousel-index="'+targetIndex+'"]');
+                if (base.activeIndex === targetIndex) return base;
 
-                $items.slice(0, $targetIndex.index()).appendTo($childBox);
+                var $itemBox     = base.$itemBox;
+                var $targetIndex = $items.siblings('[carousel-index="'+targetIndex+'"]');
+
+                $items.slice(0, $targetIndex.index()).appendTo($itemBox);
                 $targetIndex.hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
                     $items.eq(0).css({ zIndex : 1 });
                     $(this).css({ zIndex : 2 });
                     base.options.end(targetIndex, base);
+                    base.activeIndex = targetIndex;
                 });
             },
 
@@ -406,7 +425,6 @@ define(function (require) {
             controlNavActived : function (index) {
                 var base = this;
 
-                base.activeIndex = index;
                 if (base.options.controlNav) {
 
                     var $controlNav = base.options.controlNav.match(/^>.+/)
@@ -456,7 +474,15 @@ define(function (require) {
             controlNav      : null,         // 选择器，控制导航
             controlNavEvent : 'click',      // 控制导航触发事件
 
-            end   : function (activeIndex, base) { }, // 切换完成后的回调函数
+            $itemBox : function ($baseElement) {
+                return $baseElement.children().not($('script, style')).first();
+            },
+
+            $items   : function ($itemBox) {
+                return $itemBox.children().not($('script, style'));
+            },
+
+            end      : function (activeIndex, base) { }, // 切换完成后的回调函数
 
             other : null
         };
