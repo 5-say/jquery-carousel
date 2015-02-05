@@ -346,8 +346,10 @@ define(function (require) {
 
                 var $itemBox     = base.$itemBox;
                 var $targetIndex = $items.siblings('[carousel-index="'+targetIndex+'"]');
+                var $otherItems  = $items.siblings('[carousel-index!="'+targetIndex+'"]');
 
                 $items.slice(0, $targetIndex.index()).appendTo($itemBox).fadeOut(base.options.speed);
+                $otherItems.fadeOut(base.options.speed);
                 $targetIndex.hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
                     $items.eq(0).css({ zIndex : 1 });
                     $(this).css({ zIndex : 2 });
