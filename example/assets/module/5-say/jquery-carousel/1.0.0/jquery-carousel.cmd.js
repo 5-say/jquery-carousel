@@ -316,11 +316,11 @@ define(function (require) {
                 var $items = base.$items().stop(true, true);
                 base.controlNavActived($items.last().attr('carousel-index'));
 
+                $items.eq(0).css({ zIndex : 1 }).fadeOut(base.options.speed);
                 $items.last().prependTo(base.$itemBox).hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
-                    $items.eq(0).css({ zIndex : 1 });
                     $(this).css({ zIndex : 2 });
-                    base.options.end($(this).attr('carousel-index'), base);
-                    base.activeIndex++;
+                    base.activeIndex = $(this).attr('carousel-index');
+                    base.options.end(base.activeIndex, base);
                 });
             },
 
@@ -330,11 +330,11 @@ define(function (require) {
                 var $items = base.$items().stop(true, true);
                 base.controlNavActived($items.eq(1).attr('carousel-index'));
 
+                $items.eq(0).css({ zIndex : 1 }).appendTo(base.$itemBox).fadeOut(base.options.speed);
                 $items.eq(1).hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
-                    $items.eq(0).css({ zIndex : 1 }).appendTo(base.$itemBox);
                     $(this).css({ zIndex : 2 });
-                    base.options.end($(this).attr('carousel-index'), base);
-                    base.activeIndex++;
+                    base.activeIndex = $(this).attr('carousel-index');
+                    base.options.end(base.activeIndex, base);
                 });
             },
 
@@ -347,7 +347,7 @@ define(function (require) {
                 var $itemBox     = base.$itemBox;
                 var $targetIndex = $items.siblings('[carousel-index="'+targetIndex+'"]');
 
-                $items.slice(0, $targetIndex.index()).appendTo($itemBox);
+                $items.slice(0, $targetIndex.index()).appendTo($itemBox).fadeOut(base.options.speed);
                 $targetIndex.hide().css({ zIndex : 3 }).fadeIn(base.options.speed, function () {
                     $items.eq(0).css({ zIndex : 1 });
                     $(this).css({ zIndex : 2 });
